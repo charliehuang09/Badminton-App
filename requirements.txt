@@ -1,0 +1,5 @@
+opencv-python
+pandas
+numpy
+torch-summary
+tensorboard
