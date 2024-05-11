@@ -16,7 +16,7 @@ def get_y(visibility, y_coord, x_coord, std=10):
     output *= 500
     output[output >= 0.5] = 255 #scale to 255 for convinece sigmoid 0-1
     output[output < 0.5] = 0
-    output = cv2.resize(output, (388, 388))
+    output = cv2.resize(output, (360, 640))
     return output
 
 def extract_data(csv_path, video_path):
@@ -29,7 +29,7 @@ def extract_data(csv_path, video_path):
     for i in range(length):
         _, frame = cap.read()
         if (i % 10 == 0 and df[i][1] == 1):
-            x.append(cv2.resize(frame, (572, 572)).transpose())
+            x.append(cv2.resize(frame, (360, 640)).transpose())
             y.append(get_y(df[i][1], df[i][2], df[i][3]))
     x = np.array(x, dtype=np.float32) / 255
     y = np.array(y, dtype=np.float32)

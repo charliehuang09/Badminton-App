@@ -46,7 +46,7 @@ def writeTrainImage(writer, model, epoch):
     img = np.array(grid)
     img = img.transpose()
     
-    writer.add_image('train/X-Images', grid.cpu(), 0)
+    writer.add_image('train/X-Images', grid.cpu(), epoch)
     
     
     imgs = np.array(imgs)
@@ -63,7 +63,7 @@ def writeTrainImage(writer, model, epoch):
     for i in img_idx:
         imgs.append(torch.from_numpy(np.array([np.load(f'data/train/labels/{i}.npy')])))
     grid = make_grid(imgs)
-    writer.add_image('train/Label-Images', grid.cpu(), 0)
+    writer.add_image('train/Label-Images', grid.cpu(), epoch)
     
 
 

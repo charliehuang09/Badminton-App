@@ -3,7 +3,7 @@ from torch import nn
 from torch.nn import DataParallel
 from dataset import Dataset
 import config
-from model import Unet
+from model import Unet, Encoder
 from tqdm import tqdm, trange
 from torch.utils.data import DataLoader
 from torchsummary import summary
@@ -16,11 +16,12 @@ def main():
     device = config.device
     torch.cuda.empty_cache()
 
-    model = Unet()
-    model = DataParallel(modelr)
+    model = Encoder()
     
-    summary(model, (3, 572, 572))
+    summary(model, (3, 360, 640))
+    # exit(0)
     
+    model = DataParallel(model)
     model = model.to(device)
     
     train_dataset = Dataset('train', test=config.test)
@@ -56,17 +57,18 @@ def main():
             trainLossLogger.add(loss.item(), len(batch))
         
         model.eval()
-        for i, batch in enumerate(valid_dataLoader):
-            x, y = batch
-            x = x.to(device)
-            y = y.to(device)
-            
-            optimizer.zero_grad()
-            outputs = model(x)
-            outputs = outputs.squeeze()
-            loss = loss_fn(outputs, y.squeeze())
-            
-            validLossLogger.add(loss.item(), len(batch))
+        with torch.no_grad():
+            for i, batch in enumerate(valid_dataLoader):
+                x, y = batch
+                x = x.to(device)
+                y = y.to(device)
+                
+                optimizer.zero_grad()
+                outputs = model(x)
+                outputs = outputs.squeeze()
+                loss = loss_fn(outputs, y.squeeze())
+                
+                validLossLogger.add(loss.item(), len(batch))
         
         writeTrainImage(writer, model, epoch)
         trainLossLogger.write()

@@ -1,8 +1,8 @@
 import torch
 
-epochs = 10
-lr = 1
-batch_size = 8
+epochs = 200
+lr = 0.1
+batch_size = 128
 
 device = torch.device('cuda')
 test = False
