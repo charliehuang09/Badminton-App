@@ -38,9 +38,8 @@ class Dataset(Dataset):
     
 def main():
     train_dataset = Dataset("train")
-    # valid_dataset = Dataset("valid")
-    
-    train_dataset[0]
+    valid_dataset = Dataset("valid")
+
 
 if __name__=='__main__':
     main()

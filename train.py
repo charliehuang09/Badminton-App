@@ -26,15 +26,15 @@ def main():
     train_dataset = Dataset('train', test=config.test)
     valid_dataset = Dataset('valid', test=config.test)
     
-    train_dataLoader = DataLoader(train_dataset, num_workers=8, batch_size=config.batch_size, prefetch_factor=8)
-    valid_dataLoader = DataLoader(valid_dataset, num_workers=8, batch_size=config.batch_size, prefetch_factor=8)
+    train_dataLoader = DataLoader(train_dataset, num_workers=16, batch_size=config.batch_size, prefetch_factor=8)
+    valid_dataLoader = DataLoader(valid_dataset, num_workers=16, batch_size=config.batch_size, prefetch_factor=8)
     
     writer = SummaryWriter()
     
     trainLossLogger = Logger(writer, 'train/Loss')
     validLossLogger = Logger(writer, 'valid/Loss')
     
-    loss_fn = MSELoss()
+    loss_fn = CrossEntropyLoss()
     
     # optimizer = Adam(model.parameters(), lr=config.lr)
     optimizer = Adadelta(model.parameters(), lr=config.lr)
