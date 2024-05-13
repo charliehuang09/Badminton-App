@@ -3,7 +3,7 @@ from torch import nn
 from torch.nn import DataParallel
 from dataset import Dataset
 import config
-from model import Unet, Encoder
+from model import Unet, TrackNet
 from tqdm import tqdm, trange
 from torch.utils.data import DataLoader
 from torchsummary import summary
@@ -16,10 +16,9 @@ def main():
     device = config.device
     torch.cuda.empty_cache()
 
-    model = Encoder()
+    model = TrackNet()
     
     summary(model, (3, 360, 640))
-    # exit(0)
     
     model = DataParallel(model)
     model = model.to(device)

@@ -55,9 +55,12 @@ def writeTrainImage(writer, model, epoch):
     
     outputs = model(imgs).detach().cpu()
     outputs = outputs.repeat([1, 3, 1, 1])
+    grid *= 500
+    grid[grid >= 0.5] = 255 #scale to 255 for convinece sigmoid 0-1
+    grid[grid < 0.5] = 0
     grid = make_grid(outputs)
     
-    writer.add_image('train/Output-Images', grid.cpu(), epoch)
+    writer.add_image('train/Output-Images', grid.cpu() * 255, epoch)
     
     imgs = []
     for i in img_idx:

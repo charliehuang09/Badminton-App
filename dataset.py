@@ -22,12 +22,25 @@ class Dataset(Dataset):
         return self.y
     def __len__(self):
         return self.length
+    def getY(self, input):
+        print(input.shape)
+        output = torch.zeros((256, 640, 360))
+        print(output.shape)
+        for i in range(640):
+            for j in range(360):
+                output[0, i, j] = 1
+        return output
     def __getitem__(self, index):
-        return torch.from_numpy(np.load(os.path.join(self.x_path, str(index) + '.npy'))), torch.from_numpy(np.load(os.path.join(self.y_path, str(index) + '.npy')))
+        x = torch.from_numpy(np.load(os.path.join(self.x_path, str(index) + '.npy')))
+        y = torch.from_numpy(np.load(os.path.join(self.y_path, str(index) + '.npy')))
+        y = self.getY(y)
+        return x, y
     
 def main():
     train_dataset = Dataset("train")
-    valid_dataset = Dataset("valid")
+    # valid_dataset = Dataset("valid")
+    
+    train_dataset[0]
 
 if __name__=='__main__':
     main()

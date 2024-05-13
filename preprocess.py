@@ -7,16 +7,18 @@ from scipy.special import softmax
 def gaussian(x, mean, std):
     return 1/(std * np.sqrt(2.0 * np.pi)) * np.exp(-(((x - mean) / std)**2/(2)))
 
-def get_y(visibility, y_coord, x_coord, std=10):
+def get_y(visibility, x_coord, y_coord, std=10):
     assert visibility == 1
-    x, y = np.indices([720, 1280])
+    x, y = np.indices([1280, 720])
     x = gaussian(x, x_coord, std)
     y = gaussian(y, y_coord, std)
     output = x * y
-    output *= 500
-    output[output >= 0.5] = 255 #scale to 255 for convinece sigmoid 0-1
-    output[output < 0.5] = 0
+    output *= (2 * np.pi * std * 255)
+    # output *= 500
+    # output[output >= 0.5] = 255 #scale to 255 for convinece sigmoid 0-1
+    # output[output < 0.5] = 0
     output = cv2.resize(output, (360, 640))
+    output = np.rint(output).astype(np.int16)
     return output
 
 def extract_data(csv_path, video_path):
@@ -28,11 +30,11 @@ def extract_data(csv_path, video_path):
     
     for i in range(length):
         _, frame = cap.read()
-        if (i % 10 == 0 and df[i][1] == 1):
-            x.append(cv2.resize(frame, (360, 640)).transpose())
+        if (i % 5 == 0 and df[i][1] == 1):
+            x.append(cv2.resize(frame, (640, 360)).swapaxes(0, 2))
             y.append(get_y(df[i][1], df[i][2], df[i][3]))
     x = np.array(x, dtype=np.float32) / 255
-    y = np.array(y, dtype=np.float32)
+    y = np.array(y, dtype=np.int16)
     return x, y
 
 def preprocess(data_path, write_path):
