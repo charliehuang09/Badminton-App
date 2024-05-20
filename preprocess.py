@@ -14,11 +14,8 @@ def get_y(visibility, x_coord, y_coord, std=10):
     y = gaussian(y, y_coord, std)
     output = x * y
     output *= (2 * np.pi * std * 255)
-    # output *= 500
-    # output[output >= 0.5] = 255 #scale to 255 for convinece sigmoid 0-1
-    # output[output < 0.5] = 0
     output = cv2.resize(output, (360, 640))
-    output = np.rint(output).astype(np.int16)
+    output = np.rint(output).astype(np.int16) * 10
     return output
 
 def extract_data(csv_path, video_path):

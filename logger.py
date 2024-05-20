@@ -5,7 +5,8 @@ import random
 import config
 import os
 from torch.utils.tensorboard import SummaryWriter
-from model import Unet
+from model import Unet, TrackNet
+from torchsummary import summary
 import cv2
 class Logger:
     def __init__(self, writer, writer_path):
@@ -34,9 +35,19 @@ class Logger:
         
         return value
         
-        
+def argmax(input):
+    input[0] = np.argmax(input)
+    return input
+def getHeatMap(input):
+    input = input.reshape(256, -1)
+    input = np.apply_along_axis(argmax, 0, input)
+    input = input.reshape(256, 360, 640)
+    input = input[0, :, :]
+    input = np.expand_dims(input, axis=0)
+    input = torch.from_numpy(input)
+    return input
 def writeTrainImage(writer, model, epoch):
-    img_idx = random.sample(range(len(os.listdir('data/train/imgs'))), 8)
+    img_idx = random.sample(range(len(os.listdir('data/train/imgs'))), 4)
     imgs = []
     for i in img_idx:
         imgs.append(torch.from_numpy(np.load(f'data/train/imgs/{i}.npy')))
@@ -54,13 +65,13 @@ def writeTrainImage(writer, model, epoch):
     imgs = imgs.to(config.device)
     
     outputs = model(imgs).detach().cpu()
-    outputs = outputs.repeat([1, 3, 1, 1])
-    grid *= 500
-    grid[grid >= 0.5] = 255 #scale to 255 for convinece sigmoid 0-1
-    grid[grid < 0.5] = 0
-    grid = make_grid(outputs)
-    
-    writer.add_image('train/Output-Images', grid.cpu() * 255, epoch)
+    grid = []
+    for output in outputs:
+        grid.append(getHeatMap(output))
+    print(grid[0].shape)
+    grid = make_grid(grid)
+    print(grid.shape)
+    writer.add_image('train/Output-Images', grid, epoch)
     
     imgs = []
     for i in img_idx:
@@ -71,7 +82,7 @@ def writeTrainImage(writer, model, epoch):
 
 
 def main():
-    model = Unet().to(config.device)
+    model = TrackNet().to(config.device)
     writer = SummaryWriter()
     writeTrainImage(writer, model, 0)
 

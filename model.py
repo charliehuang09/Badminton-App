@@ -279,6 +279,8 @@ class TrackNet(torch.nn.Module):
         x = self.decoder(x)
         
         x = x.reshape(batch_size, 256, -1)
+        x = self.softmax(x)
+        x = x.reshape(batch_size, 256, 360, 640)
         
         return x
 

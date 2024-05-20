@@ -26,8 +26,8 @@ def main():
     train_dataset = Dataset('train', test=config.test)
     valid_dataset = Dataset('valid', test=config.test)
     
-    train_dataLoader = DataLoader(train_dataset, num_workers=16, batch_size=config.batch_size, prefetch_factor=8)
-    valid_dataLoader = DataLoader(valid_dataset, num_workers=16, batch_size=config.batch_size, prefetch_factor=8)
+    train_dataLoader = DataLoader(train_dataset, num_workers=config.num_workers, batch_size=config.batch_size)
+    valid_dataLoader = DataLoader(valid_dataset, num_workers=config.num_workers, batch_size=config.batch_size)
     
     writer = SummaryWriter()
     
@@ -48,8 +48,7 @@ def main():
             
             optimizer.zero_grad()
             outputs = model(x)
-            outputs = outputs.squeeze()
-            loss = loss_fn(outputs, y.squeeze())
+            loss = loss_fn(outputs.flatten(), y.flatten())
             loss.backward()
             optimizer.step()
             
@@ -64,8 +63,7 @@ def main():
                 
                 optimizer.zero_grad()
                 outputs = model(x)
-                outputs = outputs.squeeze()
-                loss = loss_fn(outputs, y.squeeze())
+                loss = loss_fn(outputs.flatten(), y.flatten())
                 
                 validLossLogger.add(loss.item(), len(batch))
         
