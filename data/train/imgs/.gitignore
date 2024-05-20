@@ -1,0 +1,5 @@
+# Ignore everything in this directory
+*
+# Except this file
+!.gitignore
+# https://stackoverflow.com/questions/5091017/how-to-track-directories-but-not-their-files-with-git

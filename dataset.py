@@ -13,7 +13,7 @@ class Dataset(Dataset):
         self.test = test
         self.x_path = os.path.join('data', type, 'imgs')
         self.y_path = os.path.join('data', type, 'labels')
-        self.length = len(os.listdir(self.x_path))
+        self.length = len(os.listdir(self.x_path) - 1)
         
         self.meshgrid, _, _ = np.meshgrid(np.linspace(0, 255, 256), np.linspace(0, 0, 640), np.linspace(0, 0, 360), indexing='ij')
         
