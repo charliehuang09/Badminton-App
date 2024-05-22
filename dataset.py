@@ -13,7 +13,7 @@ class Dataset(Dataset):
         self.test = test
         self.x_path = os.path.join('data', type, 'imgs')
         self.y_path = os.path.join('data', type, 'labels')
-        self.length = len(os.listdir(self.x_path) - 1)
+        self.length = len(os.listdir(self.x_path)) - 1
         
         self.meshgrid, _, _ = np.meshgrid(np.linspace(0, 255, 256), np.linspace(0, 0, 640), np.linspace(0, 0, 360), indexing='ij')
         
@@ -35,7 +35,7 @@ class Dataset(Dataset):
         return output
     def __getitem__(self, index):
         x = torch.from_numpy(np.load(os.path.join(self.x_path, str(index) + '.npy')))
-        y = torch.from_numpy(self.getY(np.load(os.path.join(self.y_path, str(index) + '.npy'))))
+        y = torch.from_numpy(np.load(os.path.join(self.y_path, str(index) + '.npy')).astype(np.float32))
         return x, y
     
 def main():

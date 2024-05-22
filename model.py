@@ -3,6 +3,7 @@ from torch import nn
 from torchvision.transforms import CenterCrop
 import matplotlib.pyplot as plt
 from torchsummary import summary
+import config
 
 class Unet(torch.nn.Module):
     def __init__(self, channels=3):
@@ -239,7 +240,7 @@ class Decoder(torch.nn.Module):
         self.conv11 = ConvBlock(128, 64, (3, 3))
         self.conv12 = ConvBlock(64, 64, (3, 3))
         
-        self.conv13 = ConvBlock(64, 256, (3, 3))
+        self.conv13 = ConvBlock(64, config.classes + 1, (3, 3))
         
     def forward(self, x):
         # x = self.upsample1(x)
@@ -278,9 +279,9 @@ class TrackNet(torch.nn.Module):
         x = self.encoder(x)
         x = self.decoder(x)
         
-        x = x.reshape(batch_size, 256, -1)
+        x = x.reshape(batch_size, config.classes + 1, -1)
         x = self.softmax(x)
-        x = x.reshape(batch_size, 256, 360, 640)
+        x = x.reshape(batch_size, config.classes + 1, 360, 640)
         
         return x
 

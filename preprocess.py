@@ -3,9 +3,11 @@ import numpy as np
 import pandas as pd
 import cv2
 from tqdm import trange, tqdm
+import config
 from scipy.special import softmax
 def gaussian(x, mean, std):
-    return 1/(std * np.sqrt(2.0 * np.pi)) * np.exp(-(((x - mean) / std)**2/(2)))
+    # return 1/(std * np.sqrt(2.0 * np.pi)) * np.exp(-(((x - mean) / std)**2/(2)))
+    return (1/ (std*np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x - mean) / std) ** 2)
 
 def get_y(visibility, x_coord, y_coord, std=10):
     assert visibility == 1
@@ -13,9 +15,17 @@ def get_y(visibility, x_coord, y_coord, std=10):
     x = gaussian(x, x_coord, std)
     y = gaussian(y, y_coord, std)
     output = x * y
-    output *= (2 * np.pi * std * 255)
+    output *= (2 * np.pi * std * 10) * config.classes
     output = cv2.resize(output, (360, 640))
-    output = np.rint(output).astype(np.int16) * 10
+    output = np.rint(output).astype(np.int16)
+    output = convert_y(output)
+    return output
+
+def convert_y(input):
+    meshgrid, _, _ = np.meshgrid(np.linspace(0, config.classes, config.classes + 1), np.linspace(0, 0, 640), np.linspace(0, 0, 360), indexing='ij')
+    output = np.empty((config.classes + 1, 640, 360))
+    for i in range(config.classes + 1):
+        output[i] = (meshgrid[i] == input)
     return output
 
 def extract_data(csv_path, video_path):
@@ -27,7 +37,7 @@ def extract_data(csv_path, video_path):
     
     for i in range(length):
         _, frame = cap.read()
-        if (i % 5 == 0 and df[i][1] == 1):
+        if (i % 10 == 0 and df[i][1] == 1):
             x.append(cv2.resize(frame, (640, 360)).swapaxes(0, 2))
             y.append(get_y(df[i][1], df[i][2], df[i][3]))
     x = np.array(x, dtype=np.float32) / 255

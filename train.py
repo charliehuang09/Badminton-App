@@ -48,6 +48,7 @@ def main():
             
             optimizer.zero_grad()
             outputs = model(x)
+            print(outputs.shape, y.shape)
             loss = loss_fn(outputs.flatten(), y.flatten())
             loss.backward()
             optimizer.step()
