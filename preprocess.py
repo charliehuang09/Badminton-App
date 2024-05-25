@@ -5,17 +5,19 @@ import cv2
 from tqdm import trange, tqdm
 import config
 from scipy.special import softmax
-def gaussian(x, mean, std):
-    # return 1/(std * np.sqrt(2.0 * np.pi)) * np.exp(-(((x - mean) / std)**2/(2)))
-    return (1/ (std*np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x - mean) / std) ** 2)
+def gaussian(x, mu, sig):
+    return (
+        1.0 / (np.sqrt(2.0 * np.pi) * sig) * np.exp(-np.power((x - mu) / sig, 2.0) / 2)
+    )
 
-def get_y(visibility, x_coord, y_coord, std=10):
+def get_y(visibility, x_coord, y_coord, std=10.0):
     assert visibility == 1
     x, y = np.indices([1280, 720])
     x = gaussian(x, x_coord, std)
     y = gaussian(y, y_coord, std)
     output = x * y
-    output *= (2 * np.pi * std * 10) * config.classes
+    output *= (2 * np.pi * (std)**2) # seems to work if std is squared but not squared in paper (squared because gaussian generation is different?)
+    output *= config.classes + 1 #resize messes things up
     output = cv2.resize(output, (360, 640))
     output = np.rint(output).astype(np.int16)
     output = convert_y(output)

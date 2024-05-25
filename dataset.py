@@ -34,7 +34,7 @@ class Dataset(Dataset):
             output[i] = (self.meshgrid[i] == input)
         return output
     def __getitem__(self, index):
-        x = torch.from_numpy(np.load(os.path.join(self.x_path, str(index) + '.npy')))
+        x = torch.from_numpy(np.load(os.path.join(self.x_path, str(index) + '.npy'))) / 255
         y = torch.from_numpy(np.load(os.path.join(self.y_path, str(index) + '.npy')).astype(np.float32))
         return x, y
     
@@ -44,6 +44,8 @@ def main():
     
     train_dataset[0]
     valid_dataset[0]
+    
+    summary(model, (3, 640, 360))
 
     train_dataLoader = DataLoader(train_dataset, num_workers=config.num_workers, batch_size=config.batch_size)
     valid_dataLoader = DataLoader(valid_dataset, num_workers=config.num_workers, batch_size=config.batch_size)

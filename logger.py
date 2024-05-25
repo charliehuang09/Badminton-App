@@ -35,27 +35,23 @@ class Logger:
         
         return value
         
-def argmax(input):
-    input[0] = np.argmax(input)
-    return input
 def getHeatMap(input):
-    input = input.reshape(256, -1)
-    input = np.apply_along_axis(argmax, 0, input)
-    input = input.reshape(256, 360, 640)
-    input = input[0, :, :]
-    input = np.expand_dims(input, axis=0)
-    input = torch.from_numpy(input)
-    return input
-def writeTrainImage(writer, model, epoch):
-    img_idx = random.sample(range(len(os.listdir('data/train/imgs'))), 4)
+    img = np.empty((640, 360))
+    for i in range(640):
+        for j in range(360):
+            img[i][j] = np.argmax(input[:, i, j])
+    
+    img = np.array([img])
+    img = torch.from_numpy(img)
+    img /= config.classes
+    img *= 255
+    return img
+def writeTrainImage(writer, model, epoch, num_samples=2):
+    img_idx = random.sample(range(len(os.listdir('data/train/imgs'))), num_samples)
     imgs = []
     for i in img_idx:
         imgs.append(torch.from_numpy(np.load(f'data/train/imgs/{i}.npy')))
-    
     grid = make_grid(imgs)
-    
-    img = np.array(grid)
-    img = img.transpose()
     
     writer.add_image('train/X-Images', grid.cpu(), epoch)
     
@@ -68,15 +64,13 @@ def writeTrainImage(writer, model, epoch):
     grid = []
     for output in outputs:
         grid.append(getHeatMap(output))
-    print(grid[0].shape)
     grid = make_grid(grid)
-    print(grid.shape)
     writer.add_image('train/Output-Images', grid, epoch)
     
-    imgs = []
+    grid = []
     for i in img_idx:
-        imgs.append(torch.from_numpy(np.array([np.load(f'data/train/labels/{i}.npy')])))
-    grid = make_grid(imgs)
+        grid.append(getHeatMap(np.load(f'data/train/labels/{i}.npy')))
+    grid = make_grid(grid)
     writer.add_image('train/Label-Images', grid.cpu(), epoch)
     
 

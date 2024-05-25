@@ -156,7 +156,7 @@ class Unet(torch.nn.Module):
 class ConvBlock(torch.nn.Module):
     def __init__(self, inchannels, outchannels, kernal):
         super().__init__()
-        self.conv = nn.Conv2d(inchannels, outchannels, kernal, padding='same')
+        self.conv = nn.Conv2d(inchannels, outchannels, kernal, padding=1)
         self.activation = nn.ReLU()
         self.normalize = nn.BatchNorm2d(outchannels)
     def forward(self, x):
@@ -187,11 +187,6 @@ class Encoder(torch.nn.Module):
         self.conv11 = ConvBlock(256, 512, (3, 3))
         self.conv12 = ConvBlock(512, 512, (3, 3))
         self.conv13 = ConvBlock(512, 512, (3, 3))
-        self.maxPool14 = nn.MaxPool2d((2, 2), 2)
-        
-        self.conv15 = ConvBlock(512, 1024, (3, 3))
-        self.conv16 = ConvBlock(1024, 1024, (3, 3))
-        self.conv17 = ConvBlock(1024, 1024, (3, 3))
         
     def forward(self, x):
         x = self.conv1(x)
@@ -210,11 +205,6 @@ class Encoder(torch.nn.Module):
         x = self.conv11(x)
         x = self.conv12(x)
         x = self.conv13(x)
-        # x = self.maxPool14(x)
-        
-        # x = self.conv15(x)
-        # x = self.conv16(x)
-        # x = self.conv17(x)
         
         return x
 
@@ -243,10 +233,6 @@ class Decoder(torch.nn.Module):
         self.conv13 = ConvBlock(64, config.classes + 1, (3, 3))
         
     def forward(self, x):
-        # x = self.upsample1(x)
-        # x = self.conv2(x)
-        # x = self.conv3(x)
-        # x = self.pad(x)
         
         x = self.upsample4(x)
         x = self.conv5(x)
@@ -271,23 +257,41 @@ class TrackNet(torch.nn.Module):
         self.decoder = Decoder()
         
         self.softmax = nn.Softmax(dim=1)
+        self.sigmoid = nn.Sigmoid()
+        self._init_weights()
 
         
     def forward(self, x):
+        
+        assert x[0].shape == (3, 640, 360)
+        
         batch_size = len(x)
         
         x = self.encoder(x)
         x = self.decoder(x)
         
-        x = x.reshape(batch_size, config.classes + 1, -1)
-        x = self.softmax(x)
-        x = x.reshape(batch_size, config.classes + 1, 360, 640)
+        # x = x.reshape(batch_size, config.classes + 1, -1)
+        # x = self.softmax(x)
+        # x = x.reshape(batch_size, config.classes + 1, 640, 360)
+        
+        x = self.sigmoid(x)
         
         return x
+    
+    def _init_weights(self):
+        for module in self.modules():
+            if isinstance(module, nn.Conv2d):
+                nn.init.uniform_(module.weight, -0.05, 0.05)
+                if module.bias is not None:
+                    nn.init.constant_(module.bias, 0)
+
+            elif isinstance(module, nn.BatchNorm2d):
+                nn.init.constant_(module.weight, 1)
+                nn.init.constant_(module.bias, 0)    
 
 def main():
     model = TrackNet()
-    summary(model, (3, 360, 640))
+    summary(model, (3, 640, 360))
 
 if __name__=='__main__':
     main()
