@@ -6,6 +6,7 @@ from tqdm import tqdm, trange
 from typing import Literal
 from torch.utils.data import DataLoader
 from linetimer import CodeTimer
+from torchsummary import summary
 import config
 
 class Dataset(Dataset):
@@ -45,7 +46,7 @@ def main():
     train_dataset[0]
     valid_dataset[0]
     
-    summary(model, (3, 640, 360))
+    x, y = train_dataset[0]
 
     train_dataLoader = DataLoader(train_dataset, num_workers=config.num_workers, batch_size=config.batch_size)
     valid_dataLoader = DataLoader(valid_dataset, num_workers=config.num_workers, batch_size=config.batch_size)

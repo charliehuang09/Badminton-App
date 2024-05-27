@@ -274,7 +274,7 @@ class TrackNet(torch.nn.Module):
         # x = self.softmax(x)
         # x = x.reshape(batch_size, config.classes + 1, 640, 360)
         
-        x = self.sigmoid(x)
+        # x = self.sigmoid(x)
         
         return x
     

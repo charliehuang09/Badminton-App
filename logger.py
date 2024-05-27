@@ -46,7 +46,7 @@ def getHeatMap(input):
     img /= config.classes
     img *= 255
     return img
-def writeTrainImage(writer, model, epoch, num_samples=2):
+def writeTrainImage(writer, model, epoch, num_samples=4):
     img_idx = random.sample(range(len(os.listdir('data/train/imgs'))), num_samples)
     imgs = []
     for i in img_idx:
@@ -69,7 +69,7 @@ def writeTrainImage(writer, model, epoch, num_samples=2):
     
     grid = []
     for i in img_idx:
-        grid.append(getHeatMap(np.load(f'data/train/labels/{i}.npy')))
+        grid.append(torch.from_numpy(np.array([np.load(f'data/train/labels/{i}.npy')])))
     grid = make_grid(grid)
     writer.add_image('train/Label-Images', grid.cpu(), epoch)
     

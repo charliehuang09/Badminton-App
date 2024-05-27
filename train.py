@@ -46,17 +46,17 @@ def main():
             x, y = batch
             x = x.to(device)
             y = y.to(device)
+            y = y.long()
             
             optimizer.zero_grad()
             outputs = model(x)
-            loss = loss_fn(outputs.flatten(), y.flatten())
+            outputs = outputs.reshape(outputs.shape[0], outputs.shape[1], -1)
+            y = y.reshape(y.shape[0], -1)
+            loss = loss_fn(outputs, y)
             loss.backward()
             optimizer.step()
             
-            trainLossLogger.add(loss.item(), len(batch) * config.classes * 360 * 640)
-        
-        # for p in model.parameters():
-        #         print(f'===========\ngradient\n----------\n{p.grad}')
+            trainLossLogger.add(loss.item(), len(batch))
     
         model.eval()
         with torch.no_grad():
@@ -64,11 +64,14 @@ def main():
                 x, y = batch
                 x = x.to(device)
                 y = y.to(device)
+                y = y.long()
                 
                 outputs = model(x)
-                loss = loss_fn(outputs.flatten(), y.flatten())
+                outputs = outputs.reshape(outputs.shape[0], outputs.shape[1], -1)
+                y = y.reshape(y.shape[0], -1)
+                loss = loss_fn(outputs, y)
                 
-                validLossLogger.add(loss.item(), len(batch) * config.classes * 360 * 640)
+                validLossLogger.add(loss.item(), len(batch))
         
         writeTrainImage(writer, model, epoch)
         trainLossLogger.write()

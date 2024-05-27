@@ -20,7 +20,6 @@ def get_y(visibility, x_coord, y_coord, std=10.0):
     output *= config.classes + 1 #resize messes things up
     output = cv2.resize(output, (360, 640))
     output = np.rint(output).astype(np.int16)
-    output = convert_y(output)
     return output
 
 def convert_y(input):
@@ -42,6 +41,7 @@ def extract_data(csv_path, video_path):
         if (i % 10 == 0 and df[i][1] == 1):
             x.append(cv2.resize(frame, (640, 360)).swapaxes(0, 2))
             y.append(get_y(df[i][1], df[i][2], df[i][3]))
+            # print(x[-1].shape, y[-1].shape)
     x = np.array(x, dtype=np.float32) / 255
     y = np.array(y, dtype=np.int16)
     return x, y
