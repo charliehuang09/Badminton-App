@@ -19,7 +19,7 @@ def main():
 
     model = TrackNet()
     
-    summary(model, (3, 640, 360))
+    summary(model, (9, 640, 360))
     
     # model = DataParallel(model)
     model = model.to(device)

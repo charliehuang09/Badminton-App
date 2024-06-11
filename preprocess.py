@@ -10,6 +10,14 @@ def gaussian(x, mu, sig):
         1.0 / (np.sqrt(2.0 * np.pi) * sig) * np.exp(-np.power((x - mu) / sig, 2.0) / 2)
     )
 
+def convert_y(input):
+    meshgrid, _, _ = np.meshgrid(np.linspace(0, config.classes, config.classes + 1), np.linspace(0, 0, 640), np.linspace(0, 0, 360), indexing='ij')
+    output = np.empty((config.classes + 1, 640, 360))
+    for i in range(config.classes + 1):
+        output[i] = (meshgrid[i] == input)
+    return output
+
+
 def get_y(visibility, x_coord, y_coord, std=5.0):
     assert visibility == 1
     x, y = np.indices([1280, 720])
@@ -22,12 +30,13 @@ def get_y(visibility, x_coord, y_coord, std=5.0):
     output = np.rint(output).astype(np.int16)
     return output
 
-def convert_y(input):
-    meshgrid, _, _ = np.meshgrid(np.linspace(0, config.classes, config.classes + 1), np.linspace(0, 0, 640), np.linspace(0, 0, 360), indexing='ij')
-    output = np.empty((config.classes + 1, 640, 360))
-    for i in range(config.classes + 1):
-        output[i] = (meshgrid[i] == input)
+def get_x(imgs):
+    imgs[0] = cv2.resize(imgs[0], (640, 360)).swapaxes(0, 2)
+    imgs[1] = cv2.resize(imgs[1], (640, 360)).swapaxes(0, 2)
+    imgs[2] = cv2.resize(imgs[2], (640, 360)).swapaxes(0, 2)
+    output = np.vstack((imgs[0], imgs[1], imgs[2]))
     return output
+    
 
 def extract_data(csv_path, video_path):
     x = []
@@ -36,11 +45,15 @@ def extract_data(csv_path, video_path):
     cap = cv2.VideoCapture(video_path)
     length = len(df)
     
+    q = [np.zeros((720, 1280, 3)), np.zeros((720, 1280, 3)), np.zeros((720, 1280, 3))]
     for i in range(length):
         _, frame = cap.read()
-        if (i % 10 == 0 and df[i][1] == 1):
-            x.append(cv2.resize(frame, (640, 360)).swapaxes(0, 2))
-            y.append(get_y(df[i][1], df[i][2], df[i][3]))
+        q.pop(0)
+        q.append(frame)
+        
+        if (i % 10 == 0 and df[i - 1][1] == 1):
+            x.append(get_x(q))
+            y.append(get_y(df[i - 1][1], df[i - 1][2], df[i - 1][3]))
     x = np.array(x, dtype=np.float32) / 255
     y = np.array(y, dtype=np.int16)
     return x, y

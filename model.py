@@ -166,7 +166,7 @@ class ConvBlock(torch.nn.Module):
         return x
         
 class Encoder(torch.nn.Module):
-    def __init__(self, channels=3):
+    def __init__(self, channels=9):
         super().__init__()
         
         self.activation = nn.ReLU()
@@ -209,7 +209,7 @@ class Encoder(torch.nn.Module):
         return x
 
 class Decoder(torch.nn.Module):
-    def __init__(self, channels=3):
+    def __init__(self, channels=9):
         super().__init__()
         
         self.pad = nn.ZeroPad2d((0, 1, 0, 0))
@@ -251,7 +251,7 @@ class Decoder(torch.nn.Module):
         return x
     
 class TrackNet(torch.nn.Module):
-    def __init__(self, channels=3):
+    def __init__(self, channels=9):
         super().__init__()
         self.encoder = Encoder()
         self.decoder = Decoder()
@@ -262,8 +262,6 @@ class TrackNet(torch.nn.Module):
 
         
     def forward(self, x):
-        
-        assert x[0].shape == (3, 640, 360)
         
         batch_size = len(x)
         
@@ -291,7 +289,7 @@ class TrackNet(torch.nn.Module):
 
 def main():
     model = TrackNet()
-    summary(model, (3, 640, 360))
+    summary(model, (9, 640, 360))
 
 if __name__=='__main__':
     main()

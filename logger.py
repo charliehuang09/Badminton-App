@@ -65,18 +65,20 @@ def getHeatMap(img):
 def writeImages(writer, model, epoch, type : Literal['train', 'valid'], num_samples=4):
     img_idx = random.sample(range(len(os.listdir(f'data/{type}/imgs'))), num_samples)
     imgs = []
+    inputs = []
     for i in img_idx:
-        imgs.append(torch.from_numpy(np.load(f'data/{type}/imgs/{i}.npy')))
+        imgs.append(torch.from_numpy(np.load(f'data/{type}/imgs/{i}.npy')[3:6]))
+        inputs.append(torch.from_numpy(np.load(f'data/{type}/imgs/{i}.npy')))
+        
     grid = make_grid(imgs)
     
     writer.add_image(f'{type}/X-Images', grid.cpu(), epoch)
     
+    inputs = np.array(inputs)
+    inputs = torch.from_numpy(inputs)
+    inputs = inputs.to(config.device)
     
-    imgs = np.array(imgs)
-    imgs = torch.from_numpy(imgs)
-    imgs = imgs.to(config.device)
-    
-    outputs = model(imgs).detach().cpu()
+    outputs = model(inputs).detach().cpu()
     
     grid = []
     for output in outputs:
