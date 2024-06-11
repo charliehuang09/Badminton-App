@@ -17,9 +17,6 @@ class Dataset(Dataset):
         self.length = len(os.listdir(self.x_path)) - 1
         
         self.meshgrid, _, _ = np.meshgrid(np.linspace(0, 255, 256), np.linspace(0, 0, 640), np.linspace(0, 0, 360), indexing='ij')
-        
-        if (test):
-            self.length = round(self.length / 100)
             
         print(f"Length: {self.length}")
     
@@ -28,13 +25,16 @@ class Dataset(Dataset):
     def gety(self):
         return self.y
     def __len__(self):
-        return self.length
+        if (self.test):
+            return 100
+        return 200
     def getY(self, input):
         output = np.empty((256, 640, 360))
         for i in range(256):
             output[i] = (self.meshgrid[i] == input)
         return output
     def __getitem__(self, index):
+        index = np.random.randint(0, self.length - 1)
         x = torch.from_numpy(np.load(os.path.join(self.x_path, str(index) + '.npy'))) / 255
         y = torch.from_numpy(np.load(os.path.join(self.y_path, str(index) + '.npy')).astype(np.float32))
         return x, y

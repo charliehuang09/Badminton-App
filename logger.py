@@ -3,6 +3,7 @@ from torchvision.utils import make_grid
 import torch
 import random
 import config
+from typing import Literal
 import os
 from torch.utils.tensorboard import SummaryWriter
 from model import Unet, TrackNet
@@ -35,25 +36,40 @@ class Logger:
         
         return value
         
-def getHeatMap(input):
-    img = np.empty((640, 360))
-    for i in range(640):
-        for j in range(360):
-            img[i][j] = np.argmax(input[:, i, j])
+def getHeatMap(img):
+    img = np.array(img)
+    img = np.argmax(img, axis=0)
     
-    img = np.array([img])
-    img = torch.from_numpy(img)
-    img /= config.classes
-    img *= 255
-    return img
-def writeTrainImage(writer, model, epoch, num_samples=4):
-    img_idx = random.sample(range(len(os.listdir('data/train/imgs'))), num_samples)
+    img = np.array(img, dtype=np.uint8)
+    img = img[..., np.newaxis]
+    
+    circles = cv2.HoughCircles(img, method=cv2.HOUGH_GRADIENT, dp=1, minDist=100)
+    
+    if (circles is None):
+        output = np.zeros((640, 360, 3))
+        output = np.rollaxis(output, 2)
+        output = torch.from_numpy(output)
+        return output
+        
+    circles = np.uint16(np.around(circles))
+    output = np.zeros((640, 360, 3))
+    for i in circles[0,:]:
+        cv2.circle(output,(i[0],i[1]),i[2],(0,255,0),2)
+        cv2.circle(output,(i[0],i[1]),2,(0,0,255),3)
+    
+    output = np.rollaxis(output, 2)
+    
+    output = torch.from_numpy(output)
+    
+    return output
+def writeImages(writer, model, epoch, type : Literal['train', 'valid'], num_samples=4):
+    img_idx = random.sample(range(len(os.listdir(f'data/{type}/imgs'))), num_samples)
     imgs = []
     for i in img_idx:
-        imgs.append(torch.from_numpy(np.load(f'data/train/imgs/{i}.npy')))
+        imgs.append(torch.from_numpy(np.load(f'data/{type}/imgs/{i}.npy')))
     grid = make_grid(imgs)
     
-    writer.add_image('train/X-Images', grid.cpu(), epoch)
+    writer.add_image(f'{type}/X-Images', grid.cpu(), epoch)
     
     
     imgs = np.array(imgs)
@@ -61,24 +77,33 @@ def writeTrainImage(writer, model, epoch, num_samples=4):
     imgs = imgs.to(config.device)
     
     outputs = model(imgs).detach().cpu()
+    
+    grid = []
+    for output in outputs:
+        img = np.array(output)
+        img = np.argmax(img, axis=0).astype(np.float32)
+        img = np.array([img])
+        grid.append(torch.from_numpy(img))
+    grid = make_grid(grid)
+    writer.add_image(f'{type}/Output-Images', grid / 255, epoch)
+    
     grid = []
     for output in outputs:
         grid.append(getHeatMap(output))
     grid = make_grid(grid)
-    writer.add_image('train/Output-Images', grid, epoch)
+    writer.add_image(f'{type}/Processed-Images', grid, epoch)
     
     grid = []
     for i in img_idx:
-        grid.append(torch.from_numpy(np.array([np.load(f'data/train/labels/{i}.npy')])))
+        grid.append(torch.from_numpy(np.array([np.load(f'data/{type}/labels/{i}.npy')])))
     grid = make_grid(grid)
-    writer.add_image('train/Label-Images', grid.cpu(), epoch)
-    
-
+    writer.add_image(f'{type}/Label-Images', grid.cpu(), epoch)
 
 def main():
     model = TrackNet().to(config.device)
     writer = SummaryWriter()
-    writeTrainImage(writer, model, 0)
+    writeImages(writer, model, 0, 'train')
+    writeImages(writer, model, 0, 'valid')
 
 if __name__=='__main__':
     main()

@@ -10,7 +10,7 @@ def gaussian(x, mu, sig):
         1.0 / (np.sqrt(2.0 * np.pi) * sig) * np.exp(-np.power((x - mu) / sig, 2.0) / 2)
     )
 
-def get_y(visibility, x_coord, y_coord, std=10.0):
+def get_y(visibility, x_coord, y_coord, std=5.0):
     assert visibility == 1
     x, y = np.indices([1280, 720])
     x = gaussian(x, x_coord, std)
@@ -41,7 +41,6 @@ def extract_data(csv_path, video_path):
         if (i % 10 == 0 and df[i][1] == 1):
             x.append(cv2.resize(frame, (640, 360)).swapaxes(0, 2))
             y.append(get_y(df[i][1], df[i][2], df[i][3]))
-            # print(x[-1].shape, y[-1].shape)
     x = np.array(x, dtype=np.float32) / 255
     y = np.array(y, dtype=np.int16)
     return x, y

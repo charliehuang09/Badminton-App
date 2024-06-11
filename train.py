@@ -8,7 +8,7 @@ from tqdm import tqdm, trange
 from torch.utils.data import DataLoader
 from torchsummary import summary
 import time
-from logger import Logger, writeTrainImage
+from logger import Logger, writeImages
 from torch.utils.tensorboard import SummaryWriter
 from torch.optim import Adam, SGD, Adadelta
 from torch.nn import MSELoss, CrossEntropyLoss
@@ -73,7 +73,8 @@ def main():
                 
                 validLossLogger.add(loss.item(), len(batch))
         
-        writeTrainImage(writer, model, epoch)
+        writeImages(writer, model, epoch, 'train')
+        writeImages(writer, model, epoch, 'valid')
         trainLossLogger.write()
         validLossLogger.write()
         
