@@ -1,6 +1,7 @@
-# raw_data
 __pycache__
-# data
 runs
 test.png
 wandb
+raw_data_tennis
+data_tennis
+Dataset.zip

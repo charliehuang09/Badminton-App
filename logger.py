@@ -62,7 +62,8 @@ def getHeatMap(img):
     output = torch.from_numpy(output)
     
     return output
-def writeImages(writer, model, epoch, type : Literal['train', 'valid'], num_samples=4):
+def writeImages(writer, model, epoch, type : Literal['train', 'valid'], num_samples=2):
+    torch.cuda.empty_cache()
     img_idx = random.sample(range(len(os.listdir(f'data/{type}/imgs'))), num_samples)
     imgs = []
     inputs = []

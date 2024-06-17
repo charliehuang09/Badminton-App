@@ -4,6 +4,7 @@ import pandas as pd
 import cv2
 from tqdm import trange, tqdm
 import config
+import argparse
 from scipy.special import softmax
 def gaussian(x, mu, sig):
     return (
@@ -18,8 +19,7 @@ def convert_y(input):
     return output
 
 
-def get_y(visibility, x_coord, y_coord, std=5.0):
-    assert visibility == 1
+def get_y(visibility, x_coord, y_coord, std):
     x, y = np.indices([1280, 720])
     x = gaussian(x, x_coord, std)
     y = gaussian(y, y_coord, std)
@@ -53,12 +53,12 @@ def extract_data(csv_path, video_path):
         
         if (i % 10 == 0 and df[i - 1][1] == 1):
             x.append(get_x(q))
-            y.append(get_y(df[i - 1][1], df[i - 1][2], df[i - 1][3]))
+            y.append(get_y(df[i - 1][1], df[i - 1][2], df[i - 1][3], std=5))
     x = np.array(x, dtype=np.float32) / 255
     y = np.array(y, dtype=np.int16)
     return x, y
 
-def preprocess(data_path, write_path):
+def Badmintonpreprocess(data_path, write_path):
     csv_paths = []
     video_paths = []
     for match in os.listdir(data_path):
@@ -75,6 +75,23 @@ def preprocess(data_path, write_path):
             np.save(os.path.join(write_path, 'imgs', str(index)) + '.npy', x_img)
             np.save(os.path.join(write_path, 'labels', str(index)) + '.npy', y_img)
             index += 1
+
+def Tennispreprocess(data_path, write_path):
+    index = 0
+    for game in os.listdir(data_path):
+        for clip in os.listdir(os.path.join(data_path, game)):
+            q = []
+            df = pd.read_csv(os.path.join(data_path, game, clip, 'Label.csv'))
+            print(os.path.join(data_path, game, clip))
+            for i in range(len(os.listdir(os.path.join(data_path, game, clip))) - 1):
+                q.append(cv2.imread(os.path.join(data_path, game, clip, f"{i:04d}.jpg")))
+                if (len(q) == 3):
+                    np.save(os.path.join(write_path, 'imgs', f"{str(index)}.npy"), get_x(q))
+                    np.save(os.path.join(write_path, 'labels', f"{str(index)}.npy"), get_y(df.iloc[i]['visibility'], df.iloc[i]['x-coordinate'], df.iloc[i]['y-coordinate'], 5))
+                    q.pop(0)
+                    index += 1
+    
+    return
     
 def clear(path):
     filelist = [ f for f in os.listdir(path) if f.endswith(".npy") ]
@@ -82,13 +99,24 @@ def clear(path):
         os.remove(os.path.join(path, f))
         
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('type', help='b=Badminton Dataset; t=Tennis Dataset')
+    args = parser.parse_args()
+    assert args.type == 'b' or args.type == 't', 'Wrong arguments'
+
     clear('data/train/imgs')
     clear('data/train/labels')
     clear('data/valid/imgs')
     clear('data/valid/labels')
+
+    clear('data_tennis/train/imgs')
     
-    preprocess('raw_data/train', 'data/train')
-    preprocess('raw_data/valid', 'data/valid')
+    if (args.type == 'b'):
+        Badmintonpreprocess('raw_data/train', 'data/train')
+        Badmintonpreprocess('raw_data/valid', 'data/valid')
+    if (args.type == 't'):
+        Tennispreprocess('raw_data_tennis/train', 'data_tennis/train')
+        # Tennispreprocess('raw_data_tennis/valid', 'data/valid')
 
 if __name__=='__main__':
     main()

@@ -4,3 +4,10 @@ numpy
 torch-summary
 tensorboard
 linetimer
+torch
+torchvision
+matplotlib
+tqdm
+tensorboard
+scipy
+wandb
