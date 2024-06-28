@@ -5,3 +5,5 @@ wandb
 raw_data_tennis
 data_tennis
 Dataset.zip
+runs.zip
+model.pt

@@ -25,7 +25,7 @@ class Dataset(Dataset):
     def __len__(self):
         if (self.test):
             return 100
-        return 200
+        return 400
     def __getitem__(self, index):
         index = np.random.randint(0, self.length - 1)
         x = torch.from_numpy(np.load(os.path.join(self.x_path, str(index) + '.npy'))) / 255
@@ -41,8 +41,8 @@ def main():
     
     x, y = train_dataset[0]
 
-    train_dataLoader = DataLoader(train_dataset, num_workers=config.num_workers, batch_size=config.batch_size)
-    valid_dataLoader = DataLoader(valid_dataset, num_workers=config.num_workers, batch_size=config.batch_size)
+    train_dataLoader = DataLoader(train_dataset, num_workers=config.num_workers, batch_size=config.batch_size, prefetch_factor=config.prefetch_factor, shuffle=True)
+    valid_dataLoader = DataLoader(valid_dataset, num_workers=config.num_workers, batch_size=config.batch_size, prefetch_factor=config.prefetch_factor, shuffle=True)
     
     with CodeTimer():
         for i, batch in enumerate(tqdm(train_dataLoader)):

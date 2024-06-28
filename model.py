@@ -269,7 +269,7 @@ class TrackNet(torch.nn.Module):
         x = self.decoder(x)
         
         x = x.reshape(batch_size, config.classes + 1, -1)
-        x = self.softmax(x)
+        # x = self.softmax(x)
         x = x.reshape(batch_size, config.classes + 1, 640, 360)
         
         # x = self.sigmoid(x)

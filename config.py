@@ -1,9 +1,10 @@
 import torch
 
-epochs = 500
+epochs = 250
 lr = 1
-batch_size = 6
-num_workers = 6
+batch_size = 8
+num_workers = 8
+prefetch_factor=8
 
 classes = 255
 device = torch.device('cuda')

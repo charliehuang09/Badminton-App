@@ -64,7 +64,7 @@ def getHeatMap(img):
     return output
 def writeImages(writer, model, epoch, type : Literal['train', 'valid'], num_samples=2):
     torch.cuda.empty_cache()
-    img_idx = random.sample(range(len(os.listdir(f'data/{type}/imgs'))), num_samples)
+    img_idx = random.sample(range(len(os.listdir(f'data/{type}/imgs')) - 1), num_samples)
     imgs = []
     inputs = []
     for i in img_idx:
@@ -73,11 +73,12 @@ def writeImages(writer, model, epoch, type : Literal['train', 'valid'], num_samp
         
     grid = make_grid(imgs)
     
-    writer.add_image(f'{type}/X-Images', grid.cpu(), epoch)
+    writer.add_image(f'{type}/X-Images', grid.cpu() / 255, epoch)
     
     inputs = np.array(inputs)
     inputs = torch.from_numpy(inputs)
     inputs = inputs.to(config.device)
+    inputs /= 255
     
     outputs = model(inputs).detach().cpu()
     

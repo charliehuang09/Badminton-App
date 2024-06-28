@@ -5,10 +5,9 @@ import cv2
 from tqdm import trange, tqdm
 import config
 import argparse
-from scipy.special import softmax
 def gaussian(x, mu, sig):
     return (
-        1.0 / (np.sqrt(2.0 * np.pi) * sig) * np.exp(-np.power((x - mu) / sig, 2.0) / 2)
+        np.exp(-np.power((x - mu) / (sig / 2), 2.0) / 2)
     )
 
 def convert_y(input):
@@ -20,21 +19,31 @@ def convert_y(input):
 
 
 def get_y(visibility, x_coord, y_coord, std):
-    x, y = np.indices([1280, 720])
-    x = gaussian(x, x_coord, std)
-    y = gaussian(y, y_coord, std)
+    x, y = np.indices([640, 360])
+    if (visibility == 1 or visibility == 2 or visibility == 3):
+        x_coord = round(x_coord / 2)
+        y_coord = round(y_coord / 2)
+        x = gaussian(x, x_coord, std)
+        y = gaussian(y, y_coord, std)
+    if (visibility == 0):
+        x = np.zeros((640, 360))
+        y = np.zeros((640, 360))
+    # print(visibility)
     output = x * y
-    output *= (2 * np.pi * (std)**2) # seems to work if std is squared but not squared in paper (squared because gaussian generation is different?)
-    output *= config.classes + 1 #resize messes things up
-    output = cv2.resize(output, (360, 640))
+    # output *= (2 * np.pi * (std)**2) # seems to work if std is squared but not squared in paper (squared because gaussian generation is different?)
+    output *= config.classes
+    # print(output.shape, output.max())
     output = np.rint(output).astype(np.int16)
     return output
 
 def get_x(imgs):
-    imgs[0] = cv2.resize(imgs[0], (640, 360)).swapaxes(0, 2)
-    imgs[1] = cv2.resize(imgs[1], (640, 360)).swapaxes(0, 2)
-    imgs[2] = cv2.resize(imgs[2], (640, 360)).swapaxes(0, 2)
-    output = np.vstack((imgs[0], imgs[1], imgs[2]))
+    # print(imgs[0].shape)
+    # print(imgs[1].shape)
+    # print(imgs[2].shape)
+    a = cv2.resize(imgs[0], (640, 360)).swapaxes(0, 2)
+    b = cv2.resize(imgs[1], (640, 360)).swapaxes(0, 2)
+    c = cv2.resize(imgs[2], (640, 360)).swapaxes(0, 2)
+    output = np.vstack((a, b, c)).astype(np.float32)
     return output
     
 
@@ -54,7 +63,7 @@ def extract_data(csv_path, video_path):
         if (i % 10 == 0 and df[i - 1][1] == 1):
             x.append(get_x(q))
             y.append(get_y(df[i - 1][1], df[i - 1][2], df[i - 1][3], std=5))
-    x = np.array(x, dtype=np.float32) / 255
+    x = np.array(x, dtype=np.float32)
     y = np.array(y, dtype=np.int16)
     return x, y
 
@@ -78,13 +87,13 @@ def Badmintonpreprocess(data_path, write_path):
 
 def Tennispreprocess(data_path, write_path):
     index = 0
-    for game in os.listdir(data_path):
+    for game in tqdm(os.listdir(data_path)):
         for clip in os.listdir(os.path.join(data_path, game)):
             q = []
             df = pd.read_csv(os.path.join(data_path, game, clip, 'Label.csv'))
-            print(os.path.join(data_path, game, clip))
             for i in range(len(os.listdir(os.path.join(data_path, game, clip))) - 1):
                 q.append(cv2.imread(os.path.join(data_path, game, clip, f"{i:04d}.jpg")))
+
                 if (len(q) == 3):
                     np.save(os.path.join(write_path, 'imgs', f"{str(index)}.npy"), get_x(q))
                     np.save(os.path.join(write_path, 'labels', f"{str(index)}.npy"), get_y(df.iloc[i]['visibility'], df.iloc[i]['x-coordinate'], df.iloc[i]['y-coordinate'], 5))
@@ -108,15 +117,13 @@ def main():
     clear('data/train/labels')
     clear('data/valid/imgs')
     clear('data/valid/labels')
-
-    clear('data_tennis/train/imgs')
     
     if (args.type == 'b'):
         Badmintonpreprocess('raw_data/train', 'data/train')
         Badmintonpreprocess('raw_data/valid', 'data/valid')
     if (args.type == 't'):
-        Tennispreprocess('raw_data_tennis/train', 'data_tennis/train')
-        # Tennispreprocess('raw_data_tennis/valid', 'data/valid')
+        Tennispreprocess('raw_data_tennis/train', 'data/train')
+        Tennispreprocess('raw_data_tennis/valid', 'data/valid')
 
 if __name__=='__main__':
     main()

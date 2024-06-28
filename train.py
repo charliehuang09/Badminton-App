@@ -4,7 +4,7 @@ from torch.nn import DataParallel
 from dataset import Dataset
 import config
 from model import Unet, TrackNet
-from tqdm import tqdm, trange
+from tqdm.auto import tqdm, trange
 from torch.utils.data import DataLoader
 from torchsummary import summary
 import time
@@ -13,6 +13,7 @@ from torch.utils.tensorboard import SummaryWriter
 from torch.optim import Adam, SGD, Adadelta
 from torch.nn import MSELoss, CrossEntropyLoss
 def main():
+    torch.manual_seed(6872898681332916567)
     print(torch.seed())
     device = config.device
     torch.cuda.empty_cache()
@@ -77,6 +78,8 @@ def main():
         writeImages(writer, model, epoch, 'valid')
         trainLossLogger.write()
         validLossLogger.write()
+
+        torch.save(model, 'model.pt')
         
             
 
